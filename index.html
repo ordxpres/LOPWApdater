@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>FSU Status Update</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#333333">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 10px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        input[type="text"], input[type="number"], textarea {
+            padding: 8px;
+            margin: 2px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            margin: 5px;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #004175;
+        }
+        #outputContainer button {
+            background-color: #28a745; /* Green for submit */
+        }
+        #outputContainer button:hover {
+            background-color: #218838;
+        }
+        textarea {
+            width: 98%;
+        }
+        hr {
+            border: 0;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div>
+            <h1>FSU Status Update</h1>
+    
+            <div>
+                <button onclick="showRcfForm()">RCF - Received from Flight</button>
+                <button onclick="showDlvForm()">DLV - Delivered</button>
+            </div>
+    
+            <hr>
+    
+            <form id="statusForm" onsubmit="return false;">
+                <div id="commonFields" style="display: none;">
+                    <p>
+                        <label for="awb">AWB:</label>
+                        <input type="text" id="awb" name="awb" placeholder="NNN-NNNNNNNN" maxlength="12" size="14">
+                        <label for="origin">Origin:</label>
+                        <input type="text" id="origin" name="origin" value="WAW" maxlength="3" size="3">
+                        <label for="destination">Dest:</label>
+                        <input type="text" id="destination" name="destination" value="TBS" maxlength="3" size="3">
+                        <label for="totalPieces">Pieces:</label>
+                        <input type="number" id="totalPieces" name="totalPieces" max="9999" style="width: 60px;">
+                        <label for="totalWeight">Weight:</label>
+                        <input type="number" id="totalWeight" name="totalWeight" max="9999" style="width: 60px;">
+                    </p>
+                </div>
+    
+                <div id="rcfFields" style="display: none;">
+        <h3 style="color: red; font-weight: bold;">RECEIVED FROM FLIGHT</h3>
+                    <p>
+                        <label for="flight"><b>LO</b></label>
+                        <input type="text" id="flight" name="flight" placeholder="Flight" maxlength="4" size="4">
+                        <label for="arrivalDate">Date:</label>
+                        <input type="text" id="arrivalDate" name="arrivalDate" placeholder="DDMMM" maxlength="5" size="5">
+                        <label for="arrTime">Time:</label>
+                        <input type="text" id="arrTime" name="arrTime" placeholder="HHMM" maxlength="4" size="4">
+                        <label for="arrivalPort">Port:</label>
+                        <input type="text" id="arrivalPort" name="arrivalPort" value="TBS" maxlength="3" size="3">
+                    </p>
+                    <p>
+                        <label for="arrivedPieces">ARRIVED PIECES:</label>
+                        <input type="number" id="arrivedPieces" name="arrivedPieces" max="999" style="width: 50px;">
+                        <label for="arrivedWeight">ARRIVED WEIGHT:</label>
+                        <input type="number" id="arrivedWeight" name="arrivedWeight" max="9999" style="width: 60px;">
+                    </p>
+                    <button type="button" onclick="generateRcfOutput()">Generate Output</button>
+                </div>
+    
+                <div id="dlvFields" style="display: none;">
+                    <h3 style="color: red; font-weight: bold;">PICK-UP AND DELIVERY</h3>
+                    <p>
+                        <label for="pickupDate">Pick-up Date:</label>
+                        <input type="text" id="pickupDate" name="pickupDate" placeholder="DDMMM" maxlength="5" size="5">
+                        <label for="pickupTime">Pick Up time:</label>
+          V             <input type="text" id="pickupTime" name="pickupTime" placeholder="HHMM" maxlength="4" size="4">
+                        <label for="pickupPort">Port:</label>
+                        <input type="text" id="pickupPort" name="pickupPort" value="TBS" maxlength="3" size="3">
+                    </p>
+                    <p>
+                        <label for="deliveredPieces">DELIVERED PIECES:</label>
+                        <input type="number" id="deliveredPieces" name="deliveredPieces" max="999" style="width: 50px;">
+                        <label for="deliveredWeight">DELIVERED WEIGHT:</label>
+                        <input type="number" id="deliveredWeight" name="deliveredWeight" max="9999" style="width: 60px;">
+                    </p>
+                    <p>
+                        <label for="pickedUpBy">Picked up by:</label>
+                        <input type="text" id="pickedUpBy" name="pickedUpBy" maxlength="20" size="25">
+                    </p>
+                    <button type="button" onclick="generateDlvOutput()">Generate Output</button>
+                </div>
+            </form>
+    
+            <div id="outputContainer" style="display: none;">
+                <hr>
+                <h2>Plain Text Output</h2>
+                <textarea id="outputText" rows="5" style="width: 95%; font-family: monospace;"></textarea>
+                <br>
+                <button id="submitBtn" type="button" onclick="submitEmail()" style="display: none; margin-top: 10px;">SUBMIT</button>
+            </div>
+    </div>
+    
+    <script>
+        // --- FORM DISPLAY FUNCTIONS ---
+        function showRcfForm() {
+            document.getElementById('commonFields').style.display = 'block';
+            document.getElementById('rcfFields').style.display = 'block';
+            document.getElementById('dlvFields').style.display = 'none';
+            document.getElementById('outputContainer').style.display = 'none';
+        }
+    
+        function showDlvForm() {
+            document.getElementById('commonFields').style.display = 'block';
+            document.getElementById('dlvFields').style.display = 'block';
+            document.getElementById('rcfFields').style.display = 'none';
+            document.getElementById('outputContainer').style.display = 'none';
+        }
+    
+        // --- RCF OUTPUT GENERATION ---
+        function generateRcfOutput() {
+            // --- Input Validation ---
+            if (!/^\d{3}-\d{8}$/.test(document.getElementById('awb').value)) {
+                alert('Error: AWB must be in the format NNN-NNNNNNNN.');
+                return;
+            }
+            if (!/^\d{1,4}$/.test(document.getElementById('flight').value)) {
+                alert('Error: Arriving flight must be 1 to 4 digits.');
+                return;
+            }
+            if (!/^\d{2}[A-Za-z]{3}$/.test(document.getElementById('arrivalDate').value)) {
+                alert('Error: Arrival date must be in DDMMM format (e.g., 09JUL).');
+                return;
+            }
+            if (!/^\d{4}$/.test(document.getElementById('arrTime').value)) {
+                alert('Error: Arrival time must be in HHMM format.');
+                return;
+            }
+    
+            // --- Get Form Values ---
+            const form = document.getElementById('statusForm');
+            const awbValue = form.elements['awb'].value;
+            const originValue = form.elements['origin'].value.toUpperCase();
+            const destValue = form.elements['destination'].value.toUpperCase();
+    nbsp;       const totalPiecesValue = form.elements['totalPieces'].value;
+            const totalWeightValue = form.elements['totalWeight'].value;
+            const arrivedPiecesValue = form.elements['arrivedPieces'].value;
+            const arrivedWeightValue = form.elements['arrivedWeight'].value;
+            const flightValue = `LO${form.elements['flight'].value}`;
+            const dateValue = form.elements['arrivalDate'].value.toUpperCase();
+            const timeValue = form.elements['arrTime'].value;
+            const portValue = form.elements['arrivalPort'].value.toUpperCase();
+    
+            // --- Format Output ---
+            const line1 = `FSU/15`;
+            const line2 = `${awbValue}${originValue}${destValue}/T${totalPiecesValue}K${totalWeightValue}`;
+    s       const line3 = `RCF/${flightValue}/${dateValue}${timeValue}/${portValue}/T${arrivedPiecesValue}K${arrivedWeightValue}`;
+            const finalOutput = `${line1}\n${line2}\n${line3}`;
+    
+            // --- Display Output ---
+            document.getElementById('outputText').value = finalOutput;
+            document.getElementById('outputContainer').style.display = 'block';
+            document.getElementById('submitBtn').style.display = 'block';
+        }
+    
+        // --- DLV OUTPUT GENERATION ---
+        function generateDlvOutput() {
+            // --- Input Validation ---
+            if (!/^\d{3}-\d{8}$/.test(document.getElementById('awb').value)) {
+                alert('Error: AWB must be in the format NNN-NNNNNNNN.');
+                return;
+            }
+            if (!/^\d{2}[A-Za-z]{3}$/.test(document.getElementById('pickupDate').value)) {
+    nbsp;           alert('Error: Pick-up date must be in DDMMM format (e.g., 09JUL).');
+                return;
+            }
+            if (!/^\d{4}$/.test(document.getElementById('pickupTime').value)) {
+                alert('Error: Pick-up time must be in HHMM format.');
+                return;
+            }
+            if (document.getElementById('pickedUpBy').value.trim() === '') {
+                alert('Error: "Picked up by" field cannot be empty.');
+                return;
+            }
+    
+            // --- Get Form Values ---
+            const form = document.getElementById('statusForm');
+            const awbValue = form.elements['awb'].value;
+            const originValue = form.elements['origin'].value.toUpperCase();
+            const destValue = form.elements['destination'].value.toUpperCase();
+            const totalPiecesValue = form.elements['totalPieces'].value;
+            const totalWeightValue = form.elements['totalWeight'].value;
+            const deliveredPiecesValue = form.elements['deliveredPieces'].value;
+            const deliveredWeightValue = form.elements['deliveredWeight'].value;
+            const dateValue = form.elements['pickupDate'].value.toUpperCase();
+            const timeValue = form.elements['pickupTime'].value;
+            const portValue = form.elements['pickupPort'].value.toUpperCase();
+            const pickedUpByValue = form.elements['pickedUpBy'].value.toUpperCase();
+    
+            // --- Format Output ---
+            const line1 = `FSU/12`;
+            const line2 = `${awbValue}${originValue}${destValue}/T${totalPiecesValue}K${totalWeightValue}`;
+            const line3 = `DLV/${dateValue}${timeValue}/${portValue}/T${deliveredPiecesValue}K${deliveredWeightValue}/${pickedUpByValue}`;
+    nbsp;       const finalOutput = `${line1}\n${line2}\n${line3}`;
+    
+            // --- Display Output ---
+            document.getElementById('outputText').value = finalOutput;
+            document.getElementById('outputContainer').style.display = 'block';
+            document.getElementById('submitBtn').style.display = 'block';
+        }
+    
+        // --- GENERIC EMAIL SUBMISSION ---
+        function submitEmail() {
+            const recipient = 'CHACSLO@EDI.CHAMP.AERO';
+            const awbValue = document.getElementById('awb').value;
+            const subject = `FSU Status Update for AWB ${awbValue}`;
+            const body = document.getElementById('outputText').value;
+    
+            // Create the mailto link and encode the subject and body
+            const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    nbsp;       // Open the email client
+            window.location.href = mailtoLink;
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+    </script>
+
+</body>
+</html>
