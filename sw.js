@@ -2,12 +2,12 @@ const CACHE_NAME = 'fsu-status-v1';
 const URLS_TO_CACHE = [
   './',
   './index.html',
+  './app.js',  // <-- This is the important addition
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
 ];
 
-// Install the service worker and cache the app's shell
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -18,17 +18,14 @@ self.addEventListener('install', event => {
   );
 });
 
-// Serve cached content when offline
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Cache hit - return response
         if (response) {
-          return response;
+          return response; // Serve from cache
         }
-        // Not in cache - fetch from network
-        return fetch(event.request);
+        return fetch(event.request); // Not in cache, fetch from network
       }
     )
   );
