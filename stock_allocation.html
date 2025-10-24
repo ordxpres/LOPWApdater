@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWB Data Extractor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="h-full flex items-center justify-center bg-gray-900 text-gray-100 p-6">
+
+    <div class="w-full max-w-2xl bg-gray-800 shadow-2xl rounded-xl p-6 md:p-8">
+        <h1 class="text-2xl font-bold text-center text-white mb-2">AWB Allocation Data Extractor</h1>
+        <p class="text-center text-gray-400 mb-6">Paste your allocation text below to format it for upload.</p>
+
+        <div class="space-y-4">
+            <!-- Station Code Input -->
+            <div>
+                <label for="stationCode" class="block text-sm font-medium text-gray-300 mb-1">1. Station Code</label>
+                <input type="text" id="stationCode" maxlength="3"
+                       class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 text-lg placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="e.g., ORD" value="ORD">
+            </div>
+
+            <!-- Text to Paste Input -->
+            <div>
+                <label for="inputText" class="block text-sm font-medium text-gray-300 mb-1">2. Paste Allocation Text</label>
+                <textarea id="inputText" rows="10"
+                          class="w-full bg-gray-700 border border-gray-600 text-white rounded-lg p-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Paste the 'Allocation Request Info' text here..."></textarea>
+            </div>
+
+            <!-- Process Button -->
+            <button id="processButton"
+                    class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800">
+                Process and Add Entry
+            </button>
+
+            <!-- Message Area -->
+            <div id="messageArea" class="text-center p-3 rounded-lg hidden"></div>
+
+            <!-- Output Section -->
+            <div id="outputSection" class="hidden space-y-4">
+                <label for="output" class="block text-sm font-medium text-gray-300">3. Queued Entries</label>
+                <pre id="output" class="w-full bg-gray-900 text-gray-200 rounded-lg p-4 border border-gray-700 overflow-x-auto text-sm"></pre>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <button id="copyButton"
+                            class="w-full bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-800">
+                        Copy All
+                    </button>
+                    <button id="downloadButton"
+                            class="w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-800">
+                        Download All
+                    </button>
+                    <button id="removeLastButton"
+                            class="w-full bg-yellow-600 text-gray-900 font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:ring-offset-gray-800">
+                        Remove Last
+                    </button>
+                    <button id="clearButton"
+                            class="w-full bg-red-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-800">
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Store the generated output globally
+        let dataLines = [];
+        const headers = "STATION\tPREFIX\tFrom\tTo\tIssue Date\tComputer\tStockType\tAgent\tRemarks";
+
+        // Get DOM Elements
+        const stationCodeInput = document.getElementById('stationCode');
+        const inputText = document.getElementById('inputText');
+        const processButton = document.getElementById('processButton');
+        const messageArea = document.getElementById('messageArea');
+        const outputSection = document.getElementById('outputSection');
+        const outputPre = document.getElementById('output');
+        const copyButton = document.getElementById('copyButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const removeLastButton = document.getElementById('removeLastButton'); // New button
+        const clearButton = document.getElementById('clearButton');
+
+        // Attach event listeners
+        processButton.addEventListener('click', processText);
+        copyButton.addEventListener('click', copyToClipboard);
+        downloadButton.addEventListener('click', downloadFile);
+        removeLastButton.addEventListener('click', removeLastEntry); // New listener
+        clearButton.addEventListener('click', clearAllEntries);
+
+        /**
+         * Main function to process the pasted text
+         */
+        function processText() {
+            // Clear previous results
+            messageArea.classList.add('hidden');
+            messageArea.textContent = '';
+
+            const station = stationCodeInput.value.trim().toUpperCase();
+            const text = inputText.value;
+            const errors = [];
+
+            // --- 1. Validation ---
+            if (!station || station.length !== 3) {
+                errors.push('Please enter a 3-letter Station Code.');
+            }
+            if (!text) {
+                errors.push('Please paste the allocation text.');
+            }
+
+            if (errors.length > 0) {
+                showMessage(errors.join('\n'), 'error');
+                return;
+            }
+
+            // --- 2. Regex Extraction ---
+            const prefixMatch = text.match(/Airline:\s*(\d{3})/);
+            const fromMatch = text.match(/From:\s*(\d+)-(\d)/); // Captures parts before and after hyphen
+            const toMatch = text.match(/To:\s*(\d+)-(\d)/);     // Captures parts before and after hyphen
+            const dateMatch = text.match(/Expiry Date:\s*(\d{4}-\d{2}-\d{2})/);
+            const agentMatch = text.match(/Agent:\s*(\d+)\s*-\s*(\d+)/);
+
+            // --- 3. Data Assembly ---
+            const prefix = prefixMatch ? prefixMatch[1] : null;
+            const from = fromMatch ? `${fromMatch[1]}${fromMatch[2]}` : null; // Joins both parts (e.g., "1940851" + "3")
+            const to = toMatch ? `${toMatch[1]}${toMatch[2]}` : null;     // Joins both parts (e.g., "1940880" + "4")
+            const expiryDate = dateMatch ? dateMatch[1] : null;
+            const agent = agentMatch ? `${agentMatch[1]}${agentMatch[2]}` : null;
+
+            // --- 4. Check for Extraction Errors ---
+            if (!prefix) errors.push('Could not find Airline Prefix (e.g., "Airline: 080").');
+            if (!from) errors.push('Could not find "From" number (e.g., "From: 1940808-2").');
+            if (!to) errors.push('Could not find "To" number (e.g., "To: 1940834-0").');
+            if (!expiryDate) errors.push('Could not find "Expiry Date" (e.g., "Expiry Date: 2035-01-01").');
+            if (!agent) errors.push('Could not find "Agent" numbers (e.g., "Agent: 0112468 - 0012").');
+
+            if (errors.length > 0) {
+                showMessage(errors.join('\n'), 'error');
+                return;
+            }
+            
+            // --- 5. Format Data ---
+            const formattedDate = getFormattedCurrentDate(); // e.g., "24Oct2025"
+            const computer = 'N'; // Default from sample
+            const stockType = 'I'; // Default from sample
+            const filenameDateForRemarks = getFilenameDate(); // Get DDMMMYY date
+            const remarks = `CNS ${filenameDateForRemarks}`; // New remarks format
+
+            // --- 6. Build Tab-Delimited String ---
+            const dataLine = [station, prefix, from, to, formattedDate, computer, stockType, agent, remarks].join('\t');
+            
+            // --- 7. Add to queue and update UI ---
+            dataLines.push(dataLine);
+            updateOutputView();
+            showMessage(`Entry ${dataLines.length} added successfully! Ready for next.`, 'success');
+            
+            // Clear inputs for next entry
+            inputText.value = '';
+            // stationCodeInput.value = ''; // No longer clear station code
+            // stationCodeInput.focus(); // Keep focus on station code
+            inputText.focus(); // Move focus to text area
+        }
+
+        /**
+         * Updates the <pre> tag with the current queued entries
+         */
+        function updateOutputView() {
+            if (dataLines.length > 0) {
+                outputPre.textContent = dataLines.join('\n');
+                outputSection.classList.remove('hidden');
+            } else {
+                outputPre.textContent = '';
+                outputSection.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Clears all queued entries
+         */
+        function clearAllEntries() {
+            dataLines = [];
+            updateOutputView();
+            showMessage('All entries cleared.', 'success');
+        }
+
+        /**
+         * Removes the last added entry from the queue
+         */
+        function removeLastEntry() {
+            if (dataLines.length > 0) {
+                const removedLine = dataLines.pop();
+                updateOutputView();
+                showMessage('Last entry removed.', 'success');
+            } else {
+                showMessage('No entries to remove.', 'error');
+            }
+        }
+
+        /**
+         * Gets the current date and formats it as ddMonYYYY (e.g., 24Oct2025)
+         * @returns {string} The formatted current date.
+         */
+        function getFormattedCurrentDate() {
+            const date = new Date();
+            const day = ('0' + date.getDate()).slice(-2); // Use getDate() for local time
+            const year = date.getFullYear();
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const month = months[date.getMonth()];
+            return `${day}${month}${year}`;
+        }
+
+        /**
+         * Gets the current date and formats it as DDMMMYY (e.g., 24OCT25)
+         * @returns {string} The formatted current date.
+         */
+        function getFilenameDate() {
+            const date = new Date();
+            const day = ('0' + date.getDate()).slice(-2);
+            const year = date.getFullYear().toString().slice(-2);
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            const month = months[date.getMonth()];
+            return `${day}${month}${year}`;
+        }
+
+        /**
+         * Converts YYYY-MM-DD to ddMonYYYY (e.g., 01Jan2035)
+         * @param {string} yyyy_mm_dd - The date string in YYYY-MM-DD format.
+         * @returns {string} The formatted date.
+         */
+        function reformatDate(yyyy_mm_dd) {
+            // Use 'T00:00:00Z' to treat the date as UTC and avoid timezone issues
+            const date = new Date(yyyy_mm_dd + 'T00:00:00Z'); 
+            const day = ('0' + date.getUTCDate()).slice(-2);
+            const year = date.getUTCFullYear();
+            const months = ["Jan", "Feb", "Mar", "Apr","May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const month = months[date.getUTCMonth()];
+            return `${day}${month}${year}`;
+        }
+
+        /**
+         * Shows a success or error message
+         * @param {string} text - The message to display.
+         * @param {'success'|'error'} type - The type of message.
+         */
+        function showMessage(text, type) {
+            messageArea.textContent = text;
+            messageArea.classList.remove('hidden', 'bg-green-700', 'text-green-100', 'bg-red-700', 'text-red-1Message-');
+            if (type === 'success') {
+                messageArea.classList.add('bg-green-700', 'text-green-100');
+            } else {
+                messageArea.classList.add('bg-red-700', 'text-red-100');
+            }
+            // Ensure whitespace is preserved for multi-line error messages
+            messageArea.style.whiteSpace = 'pre-wrap';
+        }
+
+        /**
+         * Copies the generated output to the clipboard
+         */
+        function copyToClipboard() {
+            if (dataLines.length === 0) {
+                showMessage('No entries to copy.', 'error');
+                return;
+            }
+
+            const outputToCopy = dataLines.join('\n') + '\n' + headers;
+
+            // Use document.execCommand for iFrame compatibility
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.value = outputToCopy;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            
+            try {
+                document.execCommand('copy');
+                copyButton.textContent = 'Copied All!';
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy All';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                showMessage('Failed to copy to clipboard.', 'error');
+            }
+
+            document.body.removeChild(tempTextarea);
+        }
+
+        /**
+         * Triggers a download of the generated output as a .txt file
+         */
+        function downloadFile() {
+            if (dataLines.length === 0) {
+                showMessage('No entries to download.', 'error');
+                return;
+            }
+
+            const fileContent = dataLines.join('\n') + '\n' + headers;
+            const blob = new Blob([fileContent], { type: 'text/plain' });
+            const a = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            const filenameDate = getFilenameDate();
+            a.href = url;
+            a.download = `US CNS STOCK ${filenameDate}.txt`;
+            
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 0);
+        }
+    </script>
+</body>
+</html>
+
+
