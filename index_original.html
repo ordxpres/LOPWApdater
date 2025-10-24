@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FSU Status Update</title>
-
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#333333">
-
+    
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -23,52 +23,23 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        h2, h3 {
+        h1, h2, h3 {
             color: #333;
             margin-top: 0;
             margin-bottom: 10px;
         }
+        h1 { font-size: 1.5rem; }
         h3 { font-size: 1.1rem; }
-
-        /* === NEW: Container for Chimp + Buttons === */
-        .header-content {
-            display: flex; /* Arrange items horizontally */
-            align-items: center; /* Vertically align items */
-            gap: 15px; /* Space between chimp and buttons */
-            margin-bottom: 15px;
-        }
-
-        /* === NEW: Chimp Icon Style === */
-        .chimp-icon {
-            width: 50px; /* Adjust size as needed */
-            height: 50px;
-            fill: #001f3f; /* Navy Blue */
-            flex-shrink: 0; /* Prevent chimp from shrinking */
-        }
-
-        /* Modified: Button group now takes remaining space */
+        
         .button-group {
             display: flex;
-            flex-grow: 1; /* Allow button group to fill available space */
-            gap: 8px;
-            /* Removed margin-bottom, handled by header-content */
-        }
-        .button-group button {
-             flex: 1; /* Make buttons equal width within the group */
-             min-width: 0;
-             /* Removed max-width */
-         }
-
-
-        .utility-button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            justify-content: flex-start;
             gap: 8px;
             margin-bottom: 15px;
         }
 
         .form-group {
-            margin-bottom: 8px;
+            margin-bottom: 8px; /* <-- REDUCED for tighter spacing */
             display: flex;
             flex-direction: column;
         }
@@ -78,18 +49,20 @@
             color: #333;
             font-size: 0.9rem;
         }
-
+        
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
-
+        
+        /* === NEW 4-COLUMN ROW === */
         .form-row-4col {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 6px;
+            gap: 6px; /* Even tighter gap */
         }
+        /* Make labels in the 4-col row smaller */
         .form-row-4col .form-group label {
             font-size: 0.8rem;
         }
@@ -111,7 +84,7 @@
             border-radius: 0 5px 5px 0 !important;
             flex-grow: 1;
         }
-
+        
         .input-with-button {
             display: flex;
             gap: 8px;
@@ -120,8 +93,8 @@
             flex-grow: 1;
         }
 
-        input[type="text"],
-        input[type="number"],
+        input[type="text"], 
+        input[type="number"], 
         input[type="date"],
         input[type="time"],
         textarea {
@@ -132,13 +105,13 @@
             font-size: 0.95rem;
             box-sizing: border-box;
         }
-
+        
+        /* Make 4-col inputs smaller */
         .form-row-4col input {
             padding: 8px 6px;
             font-size: 0.9rem;
         }
 
-        /* Base button styles */
         button {
             background-color: #0056b3;
             color: white;
@@ -150,10 +123,15 @@
             font-weight: bold;
             cursor: pointer;
             transition: background-color 0.2s;
+            width: 100%;
             box-sizing: border-box;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        
+        .button-group button {
+            width: auto;
         }
 
         .button-icon {
@@ -161,21 +139,21 @@
             height: 16px;
             margin-right: 8px;
         }
-
+        
         button:hover {
             background-color: #004175;
         }
-
+        
         #submitBtn {
             background-color: #28a745;
             font-size: 0.95rem;
             padding: 10px 15px;
-            width: 100%; /* Explicit full width */
+            width: 100%;
         }
         #submitBtn:hover {
             background-color: #218838;
         }
-
+        
         .shortcut-btn {
             flex-shrink: 0;
             width: auto;
@@ -187,27 +165,7 @@
         .shortcut-btn:hover {
             background-color: #5a6268;
         }
-
-        .copy-btn {
-            background-color: #007bff;
-        }
-        .copy-btn:hover {
-            background-color: #0069d9;
-        }
-
-        .btn-secondary {
-            background-color: #6c757d;
-        }
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        .btn-danger {
-            background-color: #dc3545;
-        }
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
-
+        
         textarea {
             width: 100%;
             min-height: 70px;
@@ -222,32 +180,21 @@
 <body>
 
     <div class="container">
-
-        <div class="header-content">
-            <svg class="chimp-icon" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <path d="M50,10 C30,10 15,25 15,45 C15,65 30,80 50,80 C70,80 85,65 85,45 C85,25 70,10 50,10 Z M50,15 C66.5,15 80,28.5 80,45 C80,61.5 66.5,75 50,75 C33.5,75 20,61.5 20,45 C20,28.5 33.5,15 50,15 Z"/>
-              <path d="M35,35 C32,35 30,37 30,40 C30,43 32,45 35,45 C38,45 40,43 40,40 C40,37 38,35 35,35 Z"/>
-              <path d="M65,35 C62,35 60,37 60,40 C60,43 62,45 65,45 C68,45 70,43 70,40 C70,37 68,35 65,35 Z"/>
-              <path d="M50,55 C45,55 40,58 40,62 C40,66 45,68 50,68 C55,68 60,66 60,62 C60,58 55,55 50,55 Z M50,58 C53,58 57,59.5 57,62 C57,64.5 53,65 50,65 C47,65 43,64.5 43,62 C43,59.5 47,58 50,58 Z"/>
-              <path d="M30,50 C35,52 40,52 40,50 C40,48 35,48 30,50 Z"/>
-              <path d="M70,50 C65,52 60,52 60,50 C60,48 65,48 70,50 Z"/>
-            </svg>
-
-            <div class="button-group">
-              	<button id="btnShowRcf">
-                    <img src="rcf-icon.png" alt="" class="button-icon">
-                    RCF - Received from Flight
-                </button>
-              	<button id="btnShowDlv">
-                    <img src="dlv-icon.png" alt="" class="button-icon">
-                    DLV - Delivered
-                </button>
-            </div>
-        </div>
-        <hr>
+        <h1>FSU Status Update</h1>
+        <div class="button-group">
+          	<button id="btnShowRcf">
+                <img src="rcf-icon.png" alt="" class="button-icon">
+                RCF - Received from Flight
+            </button>
+          	<button id="btnShowDlv">
+                <img src="dlv-icon.png" alt="" class="button-icon">
+                DLV - Delivered
+            </button>
+        </div>
+        <hr>
 
         <form id="statusForm">
-                  	<div id="commonFields" style="display: none;">
+          	      	<div id="commonFields" style="display: none;">
                 <div class="form-group">
                   	<label for="awb">AWB:</label>
                   	<input type="text" id="awb" name="awb" placeholder="NNN-NNNNNNNN" maxlength="12">
@@ -266,20 +213,15 @@
                       	<input type="number" id="totalPieces" name="totalPieces" max="9999">
                     </div>
                     <div class="form-group">
-                      	<label for="totalWeight">Weight:</label>
+            F       	<label for="totalWeight">Weight:</label>
                       	<input type="number" id="totalWeight" name="totalWeight" max="9999">
                     </div>
                 </div>
           	</div>
 
-            <div id="utilityButtons" class="utility-button-group" style="display: none;">
-                <button type="button" id="btnClearAwb" class="btn-secondary">Clear AWB details</button>
-                <button type="button" id="btnClearAll" class="btn-danger">Clear All</button>
-            </div>
-
           	<div id="rcfFields" style="display: none;">
               	<h3 style="color: red; font-weight: bold;">RECEIVED FROM FLIGHT</h3>
-
+              	
                 <div class="form-row">
                     <div class="form-group">
                         <label for="flight">Flight</label>
@@ -312,17 +254,11 @@
                 <div class="form-row">
                     <div class="form-group">
                       	<label for="arrivedPieces">ARRIVED PIECES:</label>
-                        <div class="input-with-button">
-                      	    <input type="number" id="arrivedPieces" name="arrivedPieces" max="999">
-                            <button type="button" id="copyArrivedPiecesBtn" class="shortcut-btn copy-btn">Copy</button>
-                        </div>
+                      	<input type="number" id="arrivedPieces" name="arrivedPieces" max="999">
                     </div>
                     <div class="form-group">
-                      	<label for="arrivedWeight">ARRIVED WEIGHT:</label>
-                        <div class="input-with-button">
-                      	    <input type="number" id="arrivedWeight" name="arrivedWeight" max="9999">
-                            <button type="button" id="copyArrivedWeightBtn" class="shortcut-btn copy-btn">Copy</button>
-                        </div>
+            A       	<label for="arrivedWeight">ARRIVED WEIGHT:</label>
+                      	<input type="number" id="arrivedWeight" name="arrivedWeight" max="9999">
                     </div>
                 </div>
               	<button type="button" id="btnGenRcf">Generate Output</button>
@@ -330,7 +266,7 @@
 
           	<div id="dlvFields" style="display: none;">
               	<h3 style="color: red; font-weight: bold;">PICK-UP AND DELIVERY</h3>
-
+              	
                 <div class="form-row">
                     <div class="form-group">
                         <label for="pickupDate">Pick-up Date:</label>
@@ -354,17 +290,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="deliveredPieces">DELIVERED PIECES:</label>
-                        <div class="input-with-button">
-                            <input type="number" id="deliveredPieces" name="deliveredPieces" max="999">
-                            <button type="button" id="copyDeliveredPiecesBtn" class="shortcut-btn copy-btn">Copy</button>
-                        </div>
+                        <input type="number" id="deliveredPieces" name="deliveredPieces" max="999">
                     </div>
-                    <div class="form-group">
+                    <div class_="form-group">
                         <label for="deliveredWeight">DELIVERED WEIGHT:</label>
-                        <div class="input-with-button">
-                            <input type="number" id="deliveredWeight" name="deliveredWeight" max="9999">
-                            <button type="button" id="copyDeliveredWeightBtn" class="shortcut-btn copy-btn">Copy</button>
-                        </div>
+                        <input type="number" id="deliveredWeight" name="deliveredWeight" max="9999">
                     </div>
                 </div>
                 <div class="form-group">
@@ -380,12 +310,12 @@
           	<h2>Plain Text Output</h2>
             <div class="form-group">
                 <label for="outputText">Message:</label>
-        	   	<textarea id="outputText" rows="5"></textarea>
+        	    <textarea id="outputText" rows="5"></textarea>
             </div>
           	<button id="submitBtn" type="button" style="display: none;">SUBMIT</button>
       	</div>
     </div>
-
+    
     <script src="app.js"></script>
 
 </body>

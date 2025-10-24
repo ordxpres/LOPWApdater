@@ -1,6 +1,6 @@
 {
-  "name": "FSU Status Updater",
-  "short_name": "FSU Status",
+  "name": "FSU C(h)IMP",
+  "short_name": "FSU C(h)IMP",
   "description": "App to generate FSU (RCF/DLV) status messages.",
   "start_url": "./index.html",
   "display": "standalone",
